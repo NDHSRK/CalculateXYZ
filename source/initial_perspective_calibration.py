@@ -40,29 +40,30 @@ dist=np.load(save_dir + 'dist.npy')
 
 #MANUALLY INPUT YOUR MEASURED POINTS HERE
 # world center + 9 world points
-## PY center of one gray tile: 29x 29y cm
-##PY our world points come from the measurement of the x and y coordinates
-# in cm of each of the 9 circles in the patter.
+## PY follow HeadPose and set the world center (0, 0, 0)
+# to be the center of a gray tile at 29x29 cm from the top
+# left. Our world points come from the measurement of the
+# x and y Cartesian coordinates from (0, 0, 0) for each of
+# the 9 circles in the pattern. For the image coordinates
+# choose 320, 240 as the center point - although this does
+# *not* have to be the case.
 total_points_used=10
-X_center=29.0
-Y_center=29.0
-Z_center=48.0
-worldPoints=np.array([[X_center,Y_center,Z_center],
-                       [19.4, 17.8, 57.0],
-                       [27.8, 15.0, 56.0],
-                       [36.4, 18.0, 56.5],
-                       [19.4, 24.7, 52.5],
-                       [27.8, 24.5, 51.5],
-                       [36.3, 24.6, 52.0],
-                       [19.4, 30.9, 48.0],
-                       [27.8, 31.0, 47.4],
-                       [36.3, 31.1, 48.0]], dtype=np.float32)
+worldPoints=np.array([[0.0, 0.0, 0.0],
+                       [-9.5, 11.0, 0],
+                       [-1.1, 11.0,0],
+                       [7.5, 11.0, 0],
+                       [-9.5, 4.6, 0],
+                       [-1.1, 4.6, 0],
+                       [7.5, 4.6, 0],
+                       [-9.5, -1.9, 0],
+                       [-1.1, -1.9, 0],
+                       [7.5, -1.9, 0]], dtype=np.float32)
 
 #MANUALLY INPUT THE DETECTED IMAGE COORDINATES HERE
 ##PY these come measuring the center point of each dot
 # in the 9-dot template in Gimp.
 #[u,v] center + 9 Image points
-imagePoints=np.array([[cx,cy],
+imagePoints=np.array([[320, 240],
                       [210, 188],  # undistorted [216, 202]
                       [325, 190],  # undistorted [325, 205]
                       [438, 189],  # undistorted [432, 204]
@@ -117,7 +118,7 @@ undistorted = cv2.undistort(image, cam_mtx, dist, None, newcameramtx)
 cv2.imwrite(image_dir + 'undistorted.png', undistorted)
 
 print("solvePNP")
-ret, rvec1, tvec1 = cv2.solvePnP(worldPoints, imagePoints, newcameramtx, dist)
+ret, rvec1, tvec1 = cv2.solvePnP(worldPoints, imagePoints, cam_mtx, dist)
 
 print("pnp return value: " + str(ret))
 print("pnp rvec1: rotation " + str(rvec1))
@@ -133,10 +134,44 @@ for i in range(len(worldPoints)):
 
 print("total error: {}".format(mean_error / len(worldPoints)))
 
-# Draw the center and all 9 dots at their 2D positions.
+print("R - rodrigues vecs")
+R_mtx, jac=cv2.Rodrigues(rvec1)
+
+print("R|t - Extrinsic Matrix")
+Rt=np.column_stack((R_mtx,tvec1))
+
+print("newCamMtx*R|t - Projection Matrix")
+P_mtx=newcameramtx.dot(Rt)
+
+s_arr=np.array([0], dtype=np.float32)
+for i in range(0,1):
+    print("=======POINT # " + str(i) +" =========================")
+    print("Forward: From World Points, Find Image Pixel")
+    XYZ1=np.array([[worldPoints[i,0],worldPoints[i,1],worldPoints[i,2],1]], dtype=np.float32)
+    XYZ1=XYZ1.T
+    print("{{-- XYZ1")
+    print(XYZ1)
+    suv1=P_mtx.dot(XYZ1)
+    print("//-- suv1")
+    print(suv1)
+    s=suv1[2,0]
+    uv1=suv1/s
+    print(">==> uv1 - Image Points")
+    print(uv1)
+    print(">==> s - Scaling Factor")
+    print(s)
+    s_arr=np.array([s/total_points_used+s_arr[0]], dtype=np.float32)
+    #s_describe[i]=s
+
+# Project world points to image points.
 projected_image_points, _ = cv2.projectPoints(worldPoints, rvec1, tvec1, cam_mtx, dist)
-for p in projected_image_points:
-    cv2.circle(image, (int(p[0][0]), int(p[0][1])), 5, (0, 255, 0), 2)
+
+# Draw the center at its 2D position in red.
+cv2.circle(image, (int(projected_image_points[0][0][0]), int(projected_image_points[0][0][1])), 5, (0, 0, 255), 2)
+
+# Draw the 9 dots at their 2D positions in green.
+for i in range(1, len(worldPoints)):
+    cv2.circle(image, (int(projected_image_points[i][0][0]), int(projected_image_points[i][0][1])), 5, (0, 255, 0), 2)
 
 cv2.imwrite(image_dir + '2D_positions.png', image)
 

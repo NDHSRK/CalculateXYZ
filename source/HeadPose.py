@@ -33,10 +33,10 @@ image_points = np.array([
 model_points = np.array([
                             (0.0, 0.0, 0.0),             # Nose tip
                             (0.0, -330.0, -65.0),        # Chin
-                            (-225.0, 170.0, -135.0),     # Left eye left corner
-                            (225.0, 170.0, -135.0),      # Right eye right corne
-                            (-150.0, -150.0, -125.0),    # Left Mouth corner
-                            (150.0, -150.0, -125.0)      # Right mouth corner
+                            (-225.0, 170.0, -135.0),     # Right eye right corner
+                            (225.0, 170.0, -135.0),      # Left eye left corner
+                            (-150.0, -150.0, -125.0),    # Right Mouth corner
+                            (150.0, -150.0, -125.0)      # Left mouth corner
  
                         ])
  
@@ -58,11 +58,13 @@ dist_coeffs = np.zeros((4,1)) # Assuming no lens distortion
 print("Rotation Vector:\n {0}".format(rotation_vector))
 print("Translation Vector:\n {0}".format(translation_vector))
  
-# Project a 3D point (0, 0, 1000.0) onto the image plane.
+# Project the 3D point of the corner of the right eye onto the image plane.
 # We use this to draw a line sticking out of the nose
  
-(nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
- 
+(nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(-225.0, 170.0, -135.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+
+ ##!! Note - he does not *project* the center point, he just takes it from
+ # the image points.
 for p in image_points:
     cv2.circle(image, (int(p[0]), int(p[1])), 3, (0,0,255), -1)
  
