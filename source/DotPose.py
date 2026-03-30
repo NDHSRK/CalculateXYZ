@@ -7,10 +7,13 @@ import argparse  # PY
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--image_dir", type=str)
+ap.add_argument("--save_dir", type=str)
 args = vars(ap.parse_args())
 
-# Read Image
 image_dir = args["image_dir"]
+save_dir = args["save_dir"]
+
+# Read Image
 image_filename = "NineDotTemplate.jpg"
 image_full_path = image_dir + image_filename
 image = cv2.imread(image_full_path)
@@ -53,8 +56,14 @@ camera_matrix = np.array(
 print("Camera Matrix :\n {0}".format(camera_matrix))
 
 dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
-(success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix,
-                                                              dist_coeffs)  ##PY, flags=cv2.CV_ITERATIVE)
+
+# use the values for the C920
+# load camera calibration
+cam_mtx = np.load(save_dir + 'cam_mtx.npy')
+dist=np.load(save_dir + 'dist.npy')
+
+(success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, cam_mtx,
+                                                              dist)  ##PY, flags=cv2.CV_ITERATIVE)
 
 print("solvePnP return " + str(success))
 print("Rotation Vector:\n {0}".format(rotation_vector))
@@ -65,7 +74,7 @@ print("Translation Vector:\n {0}".format(translation_vector))
 # Now add a world point approximately half-way between dots 4 and 7.
 # (-9.5, 3.3, 0)
 
-(dots_2D, jacobian) = cv2.projectPoints(np.array([(-9.5, 11.0, 0), (-9.5, 4.6, 0)]), rotation_vector,
+(dots_2D, jacobian) = cv2.projectPoints(np.array([(-9.5, 11.0, 0), (7.5, 4.6, 0)]), rotation_vector,
                                                  translation_vector, camera_matrix, dist_coeffs)
 
 ##!! Note - he does not *project* the center point, he just takes it from

@@ -59,11 +59,11 @@ print("Rotation Vector:\n {0}".format(rotation_vector))
 print("Translation Vector:\n {0}".format(translation_vector))
  
 # Project the 3D point of the corner of the right eye onto the image plane.
-# We use this to draw a line sticking out of the nose
- 
-(nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(-225.0, 170.0, -135.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+# We use this to draw a line sticking out of the nose to the corner of the right eye -225.0, 170.0, -135.0
+# nose to chin
+(nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, -330.0, -65.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
 
- ##!! Note - he does not *project* the center point, he just takes it from
+ ##!! Note - he does *not* project the center point, he just takes it from
  # the image points.
 for p in image_points:
     cv2.circle(image, (int(p[0]), int(p[1])), 3, (0,0,255), -1)

@@ -26,8 +26,8 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # columns 9.
 objp = np.zeros((6 * 9, 3), np.float32)
 
-# PY follow learnopencv and do *not* add 2.5 to account for 2.5 cm per square in grid
-objp[:, :2] = np.mgrid[0:6, 0:9].T.reshape(-1, 2) # * 2.5
+# PY follow learnopencv
+objp[:, :2] = np.mgrid[0:6, 0:9].T.reshape(-1, 2)
 
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
@@ -63,7 +63,9 @@ cv2.destroyAllWindows()
 print(">==> Starting calibration")
 ret, cam_mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-# print(ret)
+# The return value is the root mean square (RMS) re-projection error,
+# which should be between .1 and 1.0.
+print(ret)
 print("Camera Matrix")
 print(cam_mtx)
 np.save(save_dir + 'cam_mtx.npy', cam_mtx)
@@ -85,7 +87,7 @@ print("Image Width, Height")
 print(w, h)
 # if using Alpha 0, so we discard the black pixels from the distortion.  this helps make the entire region of interest is the full dimensions of the image (after undistort)
 # if using Alpha 1, we retain the black pixels, and obtain the region of interest as the valid pixels for the matrix.
-# i will use Apha 1, so that I don't have to run undistort.. and can just calculate my real world x,y
+# Follow the standard OpenCV example and use Alpha 1 and then run undistort
 newcam_mtx, roi = cv2.getOptimalNewCameraMatrix(cam_mtx, dist, (w, h), 1, (w, h))
 
 print("Region of Interest")

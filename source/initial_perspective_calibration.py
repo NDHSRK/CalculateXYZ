@@ -113,10 +113,12 @@ newcameramtx, roi = cv2.getOptimalNewCameraMatrix(cam_mtx, dist, (w, h), 1, (w, 
 undistorted = cv2.undistort(image, cam_mtx, dist, None, newcameramtx)
 
 # crop the image
-#x, y, w, h = roi
-#undistorted = undistorted[y:y + h, x:x + w]
-cv2.imwrite(image_dir + 'undistorted.png', undistorted)
+x, y, w, h = roi
+undistorted = undistorted[y:y + h, x:x + w]
+cv2.imwrite(image_dir + 'UndistortedROI.png', undistorted)
 
+##!! NOTE: Paco uses newcameramtx instead of cam_mtx *BUT*
+# the results are worse.
 print("solvePNP")
 ret, rvec1, tvec1 = cv2.solvePnP(worldPoints, imagePoints, cam_mtx, dist)
 
@@ -143,8 +145,10 @@ Rt=np.column_stack((R_mtx,tvec1))
 print("newCamMtx*R|t - Projection Matrix")
 P_mtx=newcameramtx.dot(Rt)
 
+##!! NOTE: Paco Garcia does not call projectPoints to test his correlations
 s_arr=np.array([0], dtype=np.float32)
-for i in range(0,1):
+s_describe=np.array([0,0,0,0,0,0,0,0,0,0],dtype=np.float32)
+for i in range(1, total_points_used):
     print("=======POINT # " + str(i) +" =========================")
     print("Forward: From World Points, Find Image Pixel")
     XYZ1=np.array([[worldPoints[i,0],worldPoints[i,1],worldPoints[i,2],1]], dtype=np.float32)
@@ -161,13 +165,13 @@ for i in range(0,1):
     print(">==> s - Scaling Factor")
     print(s)
     s_arr=np.array([s/total_points_used+s_arr[0]], dtype=np.float32)
-    #s_describe[i]=s
+    s_describe[i]=s
 
 # Project world points to image points.
 projected_image_points, _ = cv2.projectPoints(worldPoints, rvec1, tvec1, cam_mtx, dist)
 
 # Draw the center at its 2D position in red.
-cv2.circle(image, (int(projected_image_points[0][0][0]), int(projected_image_points[0][0][1])), 5, (0, 0, 255), 2)
+cv2.circle(image, (320, 240), 5, (0, 0, 255), 2)
 
 # Draw the 9 dots at their 2D positions in green.
 for i in range(1, len(worldPoints)):
