@@ -6,7 +6,8 @@ import numpy as np
 import cv2
 import glob
 import argparse # PY
-import camera_realworldxyz
+# PY to correct hidden dependencies replace import camera_realworldxyz with
+import PerspectiveUtils
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--save_dir", type=str)
@@ -14,23 +15,16 @@ args = vars(ap.parse_args())
 
 save_dir = args["save_dir"]
 
-##TODO PY For the initial calibration we don't need the entire class
-# camera_realtimeXYZ() inside of camera_realworldxyz.py. We only
-# need enough of a subset for the function def calculate_XYZ(self,u,v)
-# to work.
-cameraXYZ = camera_realworldxyz.camera_realtimeXYZ()
-
-# PY actually a misnomer because the camera is not involved,
-# only the image points.
-calculatefromCam = True
+# PY How can this possibly work? A lot of the files
+# loaded in the constructor have not yet been created.
+# cameraXYZ = camera_realworldxyz.camera_realtimeXYZ()
+# PY replaced by PerspectiveUtils.calculate_xyz
 
 # PY not used in the original file imgdir = "/home/pi/Desktop/Captures/"
-
-##TODO PY put this on the command line
-writeValues = False
+# PY always write the files.
+# writeValues = False
 
 # test camera calibration against all points, calculating XYZ
-
 # load camera calibration
 cam_mtx = np.load(save_dir + 'cam_mtx.npy')
 dist = np.load(save_dir + 'dist.npy')
@@ -109,7 +103,7 @@ print(newcam_mtx)
 inverse_newcam_mtx = np.linalg.inv(newcam_mtx)
 print("Inverse New Camera Matrix")
 print(inverse_newcam_mtx)
-if writeValues: np.save(savedir + 'inverse_newcam_mtx.npy', inverse_newcam_mtx)
+np.save(savedir + 'inverse_newcam_mtx.npy', inverse_newcam_mtx)
 
 print(">==> Calibration Loaded")
 
@@ -119,29 +113,26 @@ print("solvePNP result: " + str(ret)) # PY
 
 print("pnp rvec1 - Rotation")
 print(rvec1)
-if writeValues: np.save(savedir + 'rvec1.npy', rvec1)
+np.save(savedir + 'rvec1.npy', rvec1)
 
 print("pnp tvec1 - Translation")
 print(tvec1)
-if writeValues: np.save(savedir + 'tvec1.npy', tvec1)
+np.save(savedir + 'tvec1.npy', tvec1)
 
 print("R - rodrigues vecs")
 R_mtx, jac = cv2.Rodrigues(rvec1)
 print(R_mtx)
-if writeValues: np.save(savedir + 'R_mtx.npy', R_mtx)
+np.save(savedir + 'R_mtx.npy', R_mtx)
 
 print("R|t - Extrinsic Matrix")
 Rt = np.column_stack((R_mtx, tvec1))
 print(Rt)
-if writeValues: np.save(savedir + 'Rt.npy', Rt)
+np.save(savedir + 'Rt.npy', Rt)
 
 print("newCamMtx*R|t - Projection Matrix")
 P_mtx = newcam_mtx.dot(Rt)
 print(P_mtx)
-if writeValues: np.save(savedir + 'P_mtx.npy', P_mtx)
-
-# [XYZ1]
-
+np.save(savedir + 'P_mtx.npy', P_mtx)
 
 # LET'S CHECK THE ACCURACY HERE
 s_arr = np.array([0], dtype=np.float32)
@@ -166,34 +157,20 @@ for i in range(0, total_points_used):
     print(s)
     s_arr = np.array([s / total_points_used + s_arr[0]], dtype=np.float32)
     s_describe[i] = s
-    if writeValues: np.save(savedir + 's_arr.npy', s_arr)
+    np.save(savedir + 's_arr.npy', s_arr)
 
     print("Solve: From Image Pixels, find World Points")
 
-    uv_1 = np.array([[imagePoints[i, 0], imagePoints[i, 1], 1]], dtype=np.float32)
-    uv_1 = uv_1.T
-    print(">==> uv1")
-    print(uv_1)
-    suv_1 = s * uv_1
-    print("//-- suv1")
-    print(suv_1)
-
-    print("get camera coordinates, multiply by inverse Camera Matrix, subtract tvec1")
-    xyz_c = inverse_newcam_mtx.dot(suv_1)
-    xyz_c = xyz_c - tvec1
-    print("      xyz_c")
+    # PY the steps here are exactly the same as in the original
+    # function calculate_xyz inside camera_realworldxyz.py. So
+    # just use the function? (The difference is that the
+    # intermediate results are printed here.)
     inverse_R_mtx = np.linalg.inv(R_mtx)
-    XYZ = inverse_R_mtx.dot(xyz_c)
+    XYZ = PerspectiveUtils.calculate_xyz(imagePoints[i, 0], imagePoints[i, 1],
+                                   s, inverse_newcam_mtx.dot, tvec1, inverse_R_mtx)
+   
     print("{{-- XYZ")
     print(XYZ)
-
-    ##TODO PY This will break until we make a subset of
-    # camera_realtimeXYZ() inside of camera_realworldxyz.py
-    # with only the function calculate_XYZ.
-    if calculatefromCam:
-        cXYZ = cameraXYZ.calculate_XYZ(imagePoints[i, 0], imagePoints[i, 1])
-        print("camXYZ")
-        print(cXYZ)
 
 s_mean, s_std = np.mean(s_describe), np.std(s_describe)
 
