@@ -7,7 +7,7 @@ import cv2
 import glob
 import argparse # PY
 # PY to correct hidden dependencies replace import camera_realworldxyz with
-import PerspectiveUtils
+from PerspectiveUtils import PerspectiveUtils
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--save_dir", type=str)
@@ -103,7 +103,7 @@ print(newcam_mtx)
 inverse_newcam_mtx = np.linalg.inv(newcam_mtx)
 print("Inverse New Camera Matrix")
 print(inverse_newcam_mtx)
-np.save(savedir + 'inverse_newcam_mtx.npy', inverse_newcam_mtx)
+np.save(save_dir + 'inverse_newcam_mtx.npy', inverse_newcam_mtx)
 
 print(">==> Calibration Loaded")
 
@@ -113,33 +113,33 @@ print("solvePNP result: " + str(ret)) # PY
 
 print("pnp rvec1 - Rotation")
 print(rvec1)
-np.save(savedir + 'rvec1.npy', rvec1)
+np.save(save_dir + 'rvec1.npy', rvec1)
 
 print("pnp tvec1 - Translation")
 print(tvec1)
-np.save(savedir + 'tvec1.npy', tvec1)
+np.save(save_dir + 'tvec1.npy', tvec1)
 
 print("R - rodrigues vecs")
 R_mtx, jac = cv2.Rodrigues(rvec1)
 print(R_mtx)
-np.save(savedir + 'R_mtx.npy', R_mtx)
+np.save(save_dir + 'R_mtx.npy', R_mtx)
 
 print("R|t - Extrinsic Matrix")
 Rt = np.column_stack((R_mtx, tvec1))
 print(Rt)
-np.save(savedir + 'Rt.npy', Rt)
+np.save(save_dir + 'Rt.npy', Rt)
 
 print("newCamMtx*R|t - Projection Matrix")
 P_mtx = newcam_mtx.dot(Rt)
 print(P_mtx)
-np.save(savedir + 'P_mtx.npy', P_mtx)
+np.save(save_dir + 'P_mtx.npy', P_mtx)
 
 # LET'S CHECK THE ACCURACY HERE
 s_arr = np.array([0], dtype=np.float32)
 s_describe = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float32)
 
 for i in range(0, total_points_used):
-    print("=======POINT # " + str(i) + " =========================")
+    print("\n=======POINT # " + str(i) + " =========================")
 
     print("Forward: From World Points, Find Image Pixel")
     XYZ1 = np.array([[worldPoints[i, 0], worldPoints[i, 1], worldPoints[i, 2], 1]], dtype=np.float32)
@@ -157,7 +157,7 @@ for i in range(0, total_points_used):
     print(s)
     s_arr = np.array([s / total_points_used + s_arr[0]], dtype=np.float32)
     s_describe[i] = s
-    np.save(savedir + 's_arr.npy', s_arr)
+    np.save(save_dir + 's_arr.npy', s_arr)
 
     print("Solve: From Image Pixels, find World Points")
 
@@ -167,7 +167,7 @@ for i in range(0, total_points_used):
     # intermediate results are printed here.)
     inverse_R_mtx = np.linalg.inv(R_mtx)
     XYZ = PerspectiveUtils.calculate_xyz(imagePoints[i, 0], imagePoints[i, 1],
-                                   s, inverse_newcam_mtx.dot, tvec1, inverse_R_mtx)
+                                   s, inverse_newcam_mtx, tvec1, inverse_R_mtx)
    
     print("{{-- XYZ")
     print(XYZ)
