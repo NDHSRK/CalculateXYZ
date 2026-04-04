@@ -1,2 +1,2 @@
 # CalculateXYZ
-Correlate #D world and 2D image positions
+Correlate 2D image positions with 3D world positions
