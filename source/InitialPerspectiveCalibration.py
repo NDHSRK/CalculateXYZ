@@ -1,6 +1,6 @@
 # Starting point on 3/29/2026 Paco Garcia's GitHub repo:
 # https://github.com/pacogarcia3/hta0-horizontal-robot-arm
-# File: initial_perspective_calibration.py
+# His file: initial_perspective_calibration.py
 
 import numpy as np
 import cv2
@@ -15,14 +15,32 @@ args = vars(ap.parse_args())
 
 save_dir = args["save_dir"]
 
-# PY How can this possibly work? A lot of the files
-# loaded in the constructor have not yet been created.
-# cameraXYZ = camera_realworldxyz.camera_realtimeXYZ()
-# PY replaced by PerspectiveUtils.calculate_xyz
+# PY In the original initial_perspective_calibration.py
+# the next line is here, near the top of the file.
+# cameraXYZ=camera_realworldxyz.camera_realtimeXYZ()
+
+# PY How can this possibly have worked since a number of
+# the files loaded in the constructor have not yet been
+# created?
+# A: it "works" because lines such as
+# self.rvec1=np.load(savedir+'rvec1.npy')
+# will result in assignments of None for non-existent
+# files. But then the original initial_camera_calibration.py
+# goes on to create those files.
+
+# Note: the original camera_realworldxyz is a class name and
+# as such does not follow Python conventions.
+# PY replaced camera_realworldxyz.camera_realtimeXYZ() with PerspectiveUtils.calculate_xyz
 
 # PY not used in the original file imgdir = "/home/pi/Desktop/Captures/"
 # PY always write the files.
-# writeValues = False
+
+# 6/28/2026
+# PY if you look in the folder C:\Users\lonep\OneDrive\Documents\FTC\FTC 2026 Post Season\CalculateXYZ\camera_data
+# you'll see that the 4 files cam_mtx.npy, dist.npy, newcam_mtx.npy, roi.npy all
+# have file creation dates of 4/10/2019 9:05PM. These are the calibration files
+# for Garcia's camera. We will use his camera calibration data to replicate his
+# perspective calibration steps before trying with our camera and toy picker.
 
 # test camera calibration against all points, calculating XYZ
 # load camera calibration
