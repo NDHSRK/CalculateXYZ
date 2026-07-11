@@ -11,20 +11,7 @@ import cv2
 # output files have been saved to save_dir.
 ##TODO Python class names should be UpperCamelCase: camera_realtimeXYZ ->
 class CameraRealtimeXYZ:
-    # camera variables
-    cam_mtx = None
-    dist = None
-    newcam_mtx = None
-    roi = None
-    rvec1 = None
-    tvec1 = None
-    R_mtx = None
-    Rt = None
-    P_mtx = None
 
-    # images
-    # PY self.img is not referenced
-    img = None
 
     ##TODO PY Pass in image_dir and save_dir.
     def __init__(self, save_dir, image_dir):
@@ -57,6 +44,7 @@ class CameraRealtimeXYZ:
     ##TODO PY by Python convention should be preview_image
     # PY called locally (commented out) and many times from
     # image_recognition_singlecam.py for debugging.
+    '''
     def previewImage(self, text, img):
         # show full screen
         cv2.namedWindow(text, cv2.WND_PROP_FULLSCREEN)
@@ -65,6 +53,7 @@ class CameraRealtimeXYZ:
         cv2.imshow(text, img)
         cv2.waitKey(2000)
         cv2.destroyAllWindows()
+    '''
 
     # PY only called locally
     def undistort_image(self, image):
@@ -74,9 +63,9 @@ class CameraRealtimeXYZ:
     # PY the background image is used for OpenCV background
     # subtraction (absdiff), which we wouldn't use for FTC
     # IntoTheDeep. Only called from main_loop.py.
-    def load_background(self, background):
-        self.bg_undst = self.undistort_image(background)
-        self.bg = background
+    #def load_background(self, background):
+    #    self.bg_undst = self.undistort_image(background)
+    #   self.bg = background
 
     ##TODO PY bypass image recognition until we can verify the
     # two important first steps: camera calibration and initial
@@ -138,7 +127,10 @@ class CameraRealtimeXYZ:
     # it can be static.
     # def calculate_XYZ(self, u, v):
 
+    #PY only called for text display in this file.
+    '''
     def truncate(self, n, decimals=0):
         n = float(n)
         multiplier = 10 ** decimals
         return int(n * multiplier) / multiplier
+    '''
