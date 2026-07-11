@@ -6,18 +6,19 @@ import numpy as np
 import cv2
 ##TODO PY defer or replace import image_recognition_singlecam
 
-# PY constructed in Garcia's main_loop.py. Assumes that CameraCalibration.py
-# and InitialPerspectiveCalibration.py have been run separately and that their
-# output files have been saved to save_dir.
+# PY constructed in Garcia's main_loop.py. Assumes that CalibrateCameraXYZ
+# and InitialPerspectiveCalibrationXYZ have been run separately and that
+# their output files have been copied into this project's to camera_data.
+
+##TODO This class should be instantiated by the main driver of the toy
+# picker project.
+
 ##TODO Python class names should be UpperCamelCase: camera_realtimeXYZ ->
 class CameraRealtimeXYZ:
 
+    def __init__(self, data_dir):
 
-    ##TODO PY Pass in image_dir and save_dir.
-    def __init__(self, save_dir, image_dir):
-
-        self.save_dir = save_dir
-        self.image_dir = image_dir # PY will be needed later when we implement image recognition
+        self.data_dir = data_dir
 
         # PY function definition from image_recognition_singlecam
         #def __init__(self, print_status=True, write_images=False,
@@ -25,17 +26,18 @@ class CameraRealtimeXYZ:
         #             preview_images=False, preview_autoclose=True, print_img_labels=True):
         ##TODO PY defer self.imageRec = image_recognition_singlecam.image_recognition(False, False, imgdir, imgdir, False, True, False)
 
-        self.cam_mtx = np.load(save_dir + 'cam_mtx.npy') # PY used in undistort_image
-        self.dist = np.load(save_dir + 'dist.npy') # PY used in undistort_image
-        self.newcam_mtx = np.load(save_dir + 'newcam_mtx.npy') # PY used in constructor and in undistort_image
-        self.roi = np.load(save_dir + 'roi.npy') # PY not used
-        self.rvec1 = np.load(save_dir + 'rvec1.npy') # PY not used
-        self.tvec1 = np.load(save_dir + 'tvec1.npy') # PY needed for PerspectiveUtils
-        self.R_mtx = np.load(save_dir + 'R_mtx.npy') # PY can be local to constructor
-        self.Rt = np.load(save_dir + 'Rt.npy') # PY not used
-        self.P_mtx = np.load(save_dir + 'P_mtx.npy') # PY not used
+        # Load the files created by camera calibration and initial perspective calibration.
+        self.cam_mtx = np.load(data_dir + 'cam_mtx.npy') # PY used in undistort_image
+        self.dist = np.load(data_dir + 'dist.npy') # PY used in undistort_image
+        self.newcam_mtx = np.load(data_dir + 'newcam_mtx.npy') # PY used in constructor and in undistort_image
+        self.roi = np.load(data_dir + 'roi.npy') # PY not used
+        self.rvec1 = np.load(data_dir + 'rvec1.npy') # PY not used
+        self.tvec1 = np.load(data_dir + 'tvec1.npy') # PY needed for PerspectiveUtils
+        self.R_mtx = np.load(data_dir + 'R_mtx.npy') # PY can be local to constructor
+        self.Rt = np.load(data_dir + 'Rt.npy') # PY not used
+        self.P_mtx = np.load(data_dir + 'P_mtx.npy') # PY not used
 
-        s_arr = np.load(save_dir + 's_arr.npy')
+        s_arr = np.load(data_dir + 's_arr.npy')
         self.scalingfactor = s_arr[0] # PY needed for PerspectiveUtils
 
         self.inverse_newcam_mtx = np.linalg.inv(self.newcam_mtx) # PY needed in undistort_image and PerspectiveUtils
@@ -55,7 +57,8 @@ class CameraRealtimeXYZ:
         cv2.destroyAllWindows()
     '''
 
-    # PY only called locally
+    ##TODO only called locally in the original; don't need a function for this -
+    # check whether cv2.undistort makes a real difference with a webcam image.
     def undistort_image(self, image):
         image_undst = cv2.undistort(image, self.cam_mtx, self.dist, None, self.newcam_mtx)
         return image_undst
